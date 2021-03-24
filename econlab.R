@@ -250,4 +250,3 @@ summary(lm(wage ~ logeduc, data=wage2))
 summary(lm(logwage ~ logeduc, data=wage2))
 
 
-
