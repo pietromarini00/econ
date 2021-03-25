@@ -248,5 +248,6 @@ summary(lm(wage ~ logeduc, data=wage2))
 
 # log-log both
 summary(lm(logwage ~ logeduc, data=wage2))
+# hello
 
 
