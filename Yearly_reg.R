@@ -115,6 +115,12 @@ month <- 1:442 # We plot it over the months, the equivalent of 40 years
 ggplot(data=NULL, aes(x=month, y=inflation))+ 
   geom_line()
 
+# inflation over the years
+dat2 <- data.frame(xvar = infl$TIME, yvar = infl$Value[year])
+# We plot it over the 37 years
+Years = 1983:2019
+ggplot(data=NULL, aes(x=Years, y=inflation[year]))+
+  geom_line()
 
 
 ### INFLATION AND UNEMPLOYMENT VARIATIONS OVER TIME ###
