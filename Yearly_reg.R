@@ -316,6 +316,6 @@ bgtest(fitWithoutOutlier, order = 1, order.by = NULL, type = c("Chisq", "F"), da
 
 
 # Jarque and Bera Test
-jb.norm.test(phillips$residuals, nrepl = 200)
+jb.norm.test(fitWithoutOutlier$residuals, nrepl = 200)
 #JB = 597.29, p-value < 2.2e-16: SHOULD LOOK FOR JB DISTRIBUTION (chi-square(2))
 
