@@ -274,13 +274,17 @@ mean(e_hat)
 # Godfeld-Quand Test
 gqtest(phillips, point = 0.5, fraction = 0, alternative = c("greater", "two.sided", "less"),
        order.by = NULL, data = list())
+gqtest(fitWithoutOutlier, point = 0.5, fraction = 0, alternative = c("greater", "two.sided", "less"),
+       order.by = NULL, data = list())
+
 
 # Breusch-Pagan Test
 bptest(phillips, varformula = NULL, studentize = TRUE, data = list())
 #p-value = 0.0006893: 0.069% small SHOULD BE GOOD --> Acceptance region
+bptest(fitWithoutOutlier, varformula = NULL, studentize = TRUE, data = list())
 
 # White Test
-white_lm(phillips, interactions = FALSE, statonly = FALSE)
+white_lm(fitWithoutOutlier, interactions = FALSE, statonly = FALSE)
 #p-value 0.000304: 0.03% small HOWEVER HERE WE SHOULD LOOK FOR R^2
 
 
@@ -288,13 +292,13 @@ white_lm(phillips, interactions = FALSE, statonly = FALSE)
 
 
 # Durbin-Watson Test
-dwtest(phillips, order.by = NULL, alternative = c("greater", "two.sided", "less"),
+dwtest(fitWithoutOutlier, order.by = NULL, alternative = c("greater", "two.sided", "less"),
        iterations = 15, exact = NULL, tol = 1e-10, data = list())
 #DW = 0.095004: too small, DW should be around 2 in H0, VERY BAD --> Rejection region
 #CHECK MEANING OF DYNAMIC MODELS (cannot be used under those)
 
 # Breusch-Godfrey Test
-bgtest(phillips, order = 1, order.by = NULL, type = c("Chisq", "F"), data = list())
+bgtest(fitWithoutOutlier, order = 1, order.by = NULL, type = c("Chisq", "F"), data = list())
 #p-value < 2.2e-16: r should be close to 0, I don't know about the p-vale
 # very small though, SHOULD BE GOOD --> Acceptance region 
 
@@ -306,32 +310,3 @@ bgtest(phillips, order = 1, order.by = NULL, type = c("Chisq", "F"), data = list
 jb.norm.test(phillips$residuals, nrepl = 200)
 #JB = 597.29, p-value < 2.2e-16: SHOULD LOOK FOR JB DISTRIBUTION (chi-square(2))
 
-
-#TEST FOR LINEARITY
-
-#DO TO
-
-
-### INTERPRETATION OF COEFFICIENTS ###
-#DO TO
-
-
-# level-level
-summary(lm(infl_variation ~ unemployment, data=df))
-
-# log-level y
-#if (infl_variation >0){
-#  log_infl <- log(infl_variation)
-#}
-#log_infl <- function(infl_variation) {
-#  for(i in 1:length(infl_variation)) {
-#    if (infl_variation > 0){ 
-#      b <- i^2 print(b)}}}
-summary(lm(logwage ~ educ, data=wage2))
-
-# level-log x
-wage2$logeduc <- log(wage2$educ)
-summary(lm(wage ~ logeduc, data=wage2))
-
-# log-log both
-summary(lm(logwage ~ logeduc, data=wage2))
