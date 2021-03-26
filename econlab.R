@@ -182,6 +182,11 @@ mean(e_hat)
 
 # TESTS FOR HOMOSCEDASTICITY
 
+#roust inference
+# Usual SE (homoskedasticity, no correlation)
+coeftest(phillips)
+# Heteroskedasticity-robust standard errors
+coeftest(phillips, vcov=hccm)
 
 # Godfeld-Quand Test
 gqtest(phillips, point = 0.5, fraction = 0, alternative = c("greater", "two.sided", "less"),
@@ -208,16 +213,20 @@ dwtest(phillips, order.by = NULL, alternative = c("greater", "two.sided", "less"
 
 # Breusch-Godfrey Test
 bgtest(phillips, order = 1, order.by = NULL, type = c("Chisq", "F"), data = list())
-#p-value < 2.2e-16: r should be close to 0, I don't know about the p-vale
-# very small though, SHOULD BE GOOD --> Acceptance region 
+#since the value is big we fail is rejecting autocorrelation
+
+# if serial correlation was an issue, one would want to use HAC-robust standard errors
+coeftest(phillips, vcov=vcovHAC)
 
 
 # TESTS FOR NORMALITY
 
-
 # Jarque and Bera Test
 jb.norm.test(phillips$residuals, nrepl = 200)
-#JB = 597.29, p-value < 2.2e-16: SHOULD LOOK FOR JB DISTRIBUTION (chi-square(2))
+#The null hypothesis is a joint hypothesis of the skewness being zero and the excess
+#kurtosis being zero. Samples from a normal distribution have an expected skewness of 
+#0 and an expected excess kurtosis of 0 (which is the same as a kurtosis of 3). As 
+#the definition of JB shows, any deviation from this increases the JB statistic.
 
 
 #TEST FOR LINEARITY
@@ -225,28 +234,11 @@ jb.norm.test(phillips$residuals, nrepl = 200)
 #DO TO
 
 
-                    ### INTERPRETATION OF COEFFICIENTS ###
-#DO TO
 
-
-# level-level
-summary(lm(infl_variation ~ unemployment, data=df))
-
-# log-level y
-#if (infl_variation >0){
-#  log_infl <- log(infl_variation)
-#}
-#log_infl <- function(infl_variation) {
-#  for(i in 1:length(infl_variation)) {
-#    if (infl_variation > 0){ 
-#      b <- i^2 print(b)}}}
-summary(lm(logwage ~ educ, data=wage2))
-
-# level-log x
-wage2$logeduc <- log(wage2$educ)
-summary(lm(wage ~ logeduc, data=wage2))
-
+<<<<<<< Updated upstream
 # log-log both
 summary(lm(logwage ~ logeduc, data=wage2))
+=======
+>>>>>>> Stashed changes
 
 
