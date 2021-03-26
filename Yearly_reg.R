@@ -255,6 +255,30 @@ lines(seq(-10, 10, by=.1), dt(seq(-10, 10, by=.1), 2))
 # looks more like a t-student
 
 
+# LINEAR REGRESSION WITH ALL THINGS TOGETHER
+#LINEAR REGRESSION WITH CRUDE OIL SPOT PRICE
+
+N <- length(unemployment)
+df2 <- data.frame(unemployment = unemployment, 
+                  change_oil = change_oil, 
+                  share_prices = share_prices,
+                  yield_10 = y10$IRLTLT01IEM156N,
+                  change_pi = change_pi)
+kvar_model <-(lm(change_pi ~ unemployment + change_oil + share_prices , data = df2))
+summary(kvar_model)
+
+#error
+e = kvar_model$residuals
+mu = mean(e)
+V = var(e)
+#ggplot(df2, aes(x = e)) + geom_histogram(color = 'green')
+hist(e, freq=F, breaks=32, ylim =c(0,0.40) )
+lines(seq(-5, 5, by=.1), dnorm(seq(-5, 5, by=.1), mu, V^0.5))
+lines(seq(-10, 10, by=.1), dt(seq(-10, 10, by=.1), 3))
+
+# THEY LOOK QUASI-Normal
+
+
 #LINEAR REGRESSION WITH LABOUR PROTECTION Z
 
 
