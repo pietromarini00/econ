@@ -49,17 +49,16 @@ s_p <- s_p[1:442]
 oil_real <-  real_oil_prices$Oil_Real[109:550]
 oil_change <- (oil_real[110:552]-oil_real[98:540])/(oil_real[98:540])
 empl_prot1 <- e_p$Value[1:30] # strictness of dismissal regulation for workers on regular contracts (1985-2019) 
-empl_prot2 <- e_p$Value[31:52] # strictness of regulation of individual dismissals of workers on regular contracts (1998-2019)
-empl_prot3 <- e_p$Value[53:64] # strictness of regulation of collective dismissals of workers on regular contracts (2000-2019)
-empl_prot4 <- e_p$Value[65:71] # Version 4 (2008-2019)
-
+#empl_prot2 <- e_p$Value[31:52] # strictness of regulation of individual dismissals of workers on regular contracts (1998-2019)
+#empl_prot3 <- e_p$Value[53:64] # strictness of regulation of collective dismissals of workers on regular contracts (2000-2019)
+#empl_prot4 <- e_p$Value[65:71] # Version 4 (2008-2019)
 year <- seq(1, 442, by=12)
 change_pi_y <- (pi[13:454]-pi[1:442])[year]
 unemployment_y <- u$Value[1:442][year]
 
 
 
-### LINEAR REGRESSION ###
+                        ### LINEAR REGRESSION ###
 
 # Data
 df <- data.frame(xvar = unemployment_y, yvar = change_pi_y)
@@ -75,7 +74,7 @@ ggplot(model.diag.metrics, aes(x= unemployment_y, y= infl_variation)) +
   geom_segment(aes(xend = unemployment_y, yend = .fitted), color = "red", size = 0.3)
 
 
-### LINEAR REGRESSION MONTHLY ###
+                    ### LINEAR REGRESSION MONTHLY ###
 
 # Data
 df <- data.frame(xvar = unemployment, yvar = change_pi)
@@ -92,7 +91,7 @@ ggplot(model.diag.metrics_m, aes(x= unemployment, y= infl_variation_m)) +
 
 
 
-### INIDIVDUAL VARIATIONS OVER TIME ###
+                ### INIDIVDUAL VARIATIONS OVER TIME ###
 
 
 # Unemployment over the months
@@ -108,7 +107,7 @@ Years = 1983:2019
 ggplot(data=NULL, aes(x=Years, y=unemployment_y))+
   geom_line()
 
-# Inflation over the years
+# Inflation over the months
 dat2 <- data.frame(xvar = infl$TIME, yvar = infl$Value)
 inflation <- pi[13:454]
 month <- 1:442 # We plot it over the months, the equivalent of 40 years
@@ -116,62 +115,60 @@ ggplot(data=NULL, aes(x=month, y=inflation))+
   geom_line()
 
 # inflation over the years
-dat2 <- data.frame(xvar = infl$TIME, yvar = infl$Value[year])
+dat2 <- data.frame(xvar = infl$TIME[year], yvar = infl$Value[year])
 # We plot it over the 37 years
 Years = 1983:2019
 ggplot(data=NULL, aes(x=Years, y=inflation[year]))+
   geom_line()
 
 
-#change inflation over the years
 
+          ### INFLATION AND UNEMPLOYMENT VARIATIONS OVER TIME ###
 
-### INFLATION AND UNEMPLOYMENT VARIATIONS OVER TIME ###
+e_hat_m <- resid(phillips_m)
 
+#Unemployment and inflation over the months
 ggplot(data=NULL, aes(x=month, y=inflation))+ 
   geom_line(color ='blue')+
-  geom_line(aes(x=month, y=unemployment), color='red') #+ 
-  #geom_point(aes(x=month, y=e_hat), color="gray")
-
+  geom_line(aes(x=month, y=unemployment), color='red') + 
+  geom_point(aes(x=month, y=e_hat_m), color="gray")
 
 #Unemployment and change in inflation over the years 
 ggplot(data=NULL, aes(x=Years, y=change_pi[year]))+ 
   geom_line(color ='blue')+
-  geom_line(aes(x=Years, y=unemployment_y), color='red') #+ 
-#geom_point(aes(x=month, y=e_hat), color="gray")
+  geom_line(aes(x=Years, y=unemployment_y), color='red') + 
+  geom_point(aes(x=month, y=e_hat_m), color="gray")
 
 #Unemployment and inflation over the years 
 ggplot(data=NULL, aes(x=Years, y=unemployment_y))+ 
   geom_line(color ='blue')+
   geom_line(aes(x=Years, y=inflation[year]), color='red') 
 
-# it looks like it goes down when the other goes up: testing this we realized it 
-# wasn't true
+# it looks like it goes down when the other goes up:
+# testing this we realized it wasn't true
 (summary(model_no_delta <- lm(inflation[year] ~ unemployment_y)))
 
 
 
-### MODEL RESIDUALS ###
+                          ### MODEL RESIDUALS ###
 
 # We fit a simple model from our wage data: infl  = a + b*unempl + e
 inflation_hat <- fitted(phillips) # fitted values: infl_hat = a + b*unempl
 e_hat <- resid(phillips)  # redisuals: e_hat = infl - a - b*unempl = infl - infl_hat
 
-ggplot(model.diag.metrics, aes(x = .fitted, y = .resid)) + geom_point()
-
-# Model Residuals over time
-ggplot(model.diag.metrics, aes(x = year, y = e_hat)) + 
+# Model Residuals over the years
+ggplot(model.diag.metrics, aes(x = Years, y = e_hat)) + 
   geom_line(color = 'green')+
   geom_line(aes(x=year, y=unemployment_y), color='red')+
   geom_line(aes(x= year, y= infl_variation), color ='blue')+
   geom_line(aes(x= year, y= phillips$fitted.values), color ='orange')
 
 # ONLY RESIDUALS
-ggplot(df, aes(x = year, y = e_hat)) + geom_line(color = 'blue')
+ggplot(model.diag.metrics, aes(x = Years, y = e_hat)) + geom_line(color = 'blue')
 
 
 
-### ALTERNATIVE LINEAR REGRESSIONS ###
+                        ### ALTERNATIVE LINEAR REGRESSIONS ###
 
 
 #LINEAR REGRESSION WITH CRUDE OIL SPOT PRICE
@@ -188,53 +185,19 @@ df2 <- data.frame(unemployment = unemployment[year],
 kvar_model <-(lm(change_inflation ~ unemployment + oil_real + share_prices + social_contribution + housing_prices + yield_10year, data = df2))
 summary(kvar_model)
 
-years = 1:37
-ggplot(df2, aes(x = years, y = kvar_model$residuals)) + geom_line(color = 'green')
- # geom_line(aes(x=years, y=unemployment), color='red')+
-#  geom_line(aes(x= years, y= infl_variation), color ='blue')+
-#  geom_line(aes(x= years, y= phillips$fitted.values), color ='orange')
-e=kvar_model$residuals
-mu = mean(kvar_model$residuals)
-V = var(kvar_model$residuals)
+ggplot(df2, aes(x = Years, y = kvar_model$residuals)) + geom_line(color = 'green')+
+  geom_line(aes(x=Years, y=unemployment), color='red')+
+  geom_line(aes(x= Years, y= infl_variation), color ='blue')+
+  geom_line(aes(x= Years, y= phillips$fitted.values), color ='orange')
+
+# We define supplementary elements
+e = kvar_model$residuals
+mu = mean(e)
+V = var(e)
 ggplot(df2, aes(x = e)) + geom_histogram(color = 'green')
 hist(e, freq=F, breaks=32)
 lines(seq(-5, 5, by=.1), dnorm(seq(-5, 5, by=.1), mu, V^0.5))
-
 # THEY LOOK QUASI-Normal
-
-
-# verify with White test
-white_lm(kvar_model, interactions = FALSE, statonly = FALSE)
-
-
-
-# OLS in Matrix Form
-Y <- as.matrix(df2[c("xvar2")] )         # Y vector (N x 1)
-X <- as.matrix(df2[c("xvar","xvar2")] )  # X matrix (N x K)
-
-# we must add a first column of ones to the X matrix, so as to account for the constant b0 in beta_hat
-const  <- rep(1,N)     # vector of ones (or any number you wish) of length 10
-X <- cbind(const,X)
-XtX <- t(X)%*%X       # X'X matrix (K x K): t(X) gives the transpose and %*% matrix multiplication
-XtY <- t(X)%*%Y       # X'Y matrix (K x 1)
-invXtX <- solve(XtX)  # (X'X)^{-1} matrix (K x K)
-
-beta_hat <- invXtX%*%XtY; beta_hat  #OLS estimators di cui change_oil viene 0
-K <- length(beta_hat)               # number of estimated parameters
-# you can easily check that we get the same coefficients as with R's "lm" command
-
-Yhat <- X%*%beta_hat      # vector of fitted values Y_hat = X*beta_hat
-uhat <- Y - Yhat          # vector of residuals
-
-# estimated variance of the errors (under homoskedasticity)
-sig2_hat <- as.numeric(t(uhat)%*%uhat / (N-K)); sig2_hat
-# estimated variance-covariance matrix of beta_hat: Vhat = sig2_hat * (X'X)^{-1}
-Vhat <- as.matrix(sig2_hat * invXtX); Vhat
-# this command extracts diagonal elements of Vhat (estimated variances)
-var_hat <- as.matrix(diag(Vhat)); var_hat  # get a K-dimensional vector of estimated variances
-# standard errors of the estimated parameters
-se <- sqrt(var_hat); se
-# you can again easily check that we get the same standard errors as with R's "lm" command
 
 
 
@@ -247,75 +210,130 @@ df2 <- data.frame(xvar = unemployment_y[0:30], xvar2 = empl_prot1, yvar = change
 summary(lm(change_pi_y[0:30] ~ unemployment_y[0:30] + empl_prot1, data = df2))
 
 
-### TEST ON THE ASSUMPTIONS ###
 
-# GRAPH TESTS
+                        ### TEST ON THE ASSUMPTIONS ###
+
+# GRAPHs TEST
 
 par(mfrow=c(2,2))
 plot(phillips)
-plot(phillips, 4)
-
+plot(phillips, 4) #Cook's Line
+    # Remove outliers
 fitWithoutOutlier <- lm(infl_variation[-29][-22][-3][-1] ~ unemployment_y[-29][-22][-3][-1], data=df)
-
+    # Draw the graph
 model.diag.metrics2 <- augment(fitWithoutOutlier)
 ggplot(model.diag.metrics2, aes(x= unemployment_y[-29][-22][-3][-1], y= infl_variation[-29][-22][-3][-1])) + 
   geom_point()+
   geom_smooth(method=lm) +
   geom_segment(aes(xend = unemployment_y[-29][-22][-3][-1], yend = .fitted), color = "red", size = 0.3)
-
+    # Run the graphical test once again
 par(mfrow=c(2,2))
 plot(fitWithoutOutlier)
-plot(fitWithoutOutlier, 5)
 plot(fitWithoutOutlier, 4)
-
+    # Compare the two regressions
 summary(fitWithoutOutlier)
 summary(phillips)
+
+    # -> The model without ouliers has sensibly improved    
 
 
 # OLS TRIVIAL TEST
 
 # OLS imposes 0 covariance between the residuals and the unemployment
 # and zero mean for the error term
-cov(u$Value[1:442][year],e_hat)
+    #For original model
+cov(u$Value[1:442],e_hat_m) 
+mean(e_hat_m)
+    #For modified model
+cov(u$Value[1:442][year],e_hat) 
 mean(e_hat)
+    #For version with oil
+cov(u$Value[1:442][year],e) #NOT SURE
+mean(e)
+
+    # -> They both pass this test
 
 
 # TESTS FOR HOMOSCEDASTICITY
-# Godfeld-Quand Test
-gqtest(phillips, point = 0.5, fraction = 0, alternative = c("greater", "two.sided", "less"),
-       order.by = NULL, data = list())
-gqtest(fitWithoutOutlier, point = 0.5, fraction = 0, alternative = c("greater", "two.sided", "less"),
-       order.by = NULL, data = list())
 
+# Godfeld-Quand Test
+
+gqtest(phillips, point = 0.5, fraction = 0, alternative = c("greater", "two.sided", "less"), order.by = NULL, data = list())
+#GQ = 1.2, large enough p-value, we accept H0 
+gqtest(fitWithoutOutlier, point = 0.5, fraction = 0, alternative = c("greater", "two.sided", "less"), order.by = NULL, data = list())
+#GQ = 1.4, p-value smaller than before but acceptable 
+gqtest(kvar_model, point = 0.5, fraction = 0, alternative = c("greater", "two.sided", "less"), order.by = NULL, data = list())
+#GQ = 1.4465, p-value = 0.2743 could be acceptable fro model with oil
 
 # Breusch-Pagan Test
+
 bptest(phillips, varformula = NULL, studentize = TRUE, data = list())
-#p-value = 0.0006893: 0.069% small SHOULD BE GOOD --> Acceptance region
+#BP = 1.5, p-value large enough to accept H0
 bptest(fitWithoutOutlier, varformula = NULL, studentize = TRUE, data = list())
+#BP = 0.33, p-value = 0.564, optival values 
+bptest(kvar_model, varformula = NULL, studentize = TRUE, data = list())
+#BP = 7.5061, p-value = 0.2766, this test, however, could reveal some heteroscedasticity
 
 # White Test
+
+white_lm(phillips, interactions = FALSE, statonly = FALSE)
+#W = 1.77, p-value = 0.412, acceptable value 
 white_lm(fitWithoutOutlier, interactions = FALSE, statonly = FALSE)
-#p-value 0.000304: 0.03% small HOWEVER HERE WE SHOULD LOOK FOR R^2
+#W = 2.24, p-value = 0.326, acceptable value 
+white_lm(kvar_model, interactions = FALSE, statonly = FALSE)
+#W = 22.2, p-value = 0.035, heteroscedasticity confirmed from this test too
+
+    # -> the linear regression is not heteroscedastic. 
+      #Overall, without outliers it presented a better alternative
+      #The alternative with oil, however, has shown heteroscedasticity.
 
 
 # TESTS FOR SERIALLY CORRELATED ERRORS
 
-
 # Durbin-Watson Test
+
+dwtest(phillips, order.by = NULL, alternative = c("greater", "two.sided", "less"),
+       iterations = 15, exact = NULL, tol = 1e-10, data = list())
+#DW = 1.6, p-value = 0.08, not great values
 dwtest(fitWithoutOutlier, order.by = NULL, alternative = c("greater", "two.sided", "less"),
        iterations = 15, exact = NULL, tol = 1e-10, data = list())
-#DW = 0.095004: too small, DW should be around 2 in H0, VERY BAD --> Rejection region
-#CHECK MEANING OF DYNAMIC MODELS (cannot be used under those)
+#DW = 1.7 p-value = 0.1368
+dwtest(kvar_model, order.by = NULL, alternative = c("greater", "two.sided", "less"),
+       iterations = 15, exact = NULL, tol = 1e-10, data = list())
+#DW = 1.9442, p-value = 0.183 #istead, the model with oil produces nicer values (since DW = 2)
 
 # Breusch-Godfrey Test
+
+bgtest(phillips, order = 1, order.by = NULL, type = c("Chisq", "F"), data = list())
+#LM = 0.36, p-value = 0.546, great values
 bgtest(fitWithoutOutlier, order = 1, order.by = NULL, type = c("Chisq", "F"), data = list())
-#p-value < 2.2e-16: r should be close to 0, I don't know about the p-vale
-# very small though, SHOULD BE GOOD --> Acceptance region
+#LM = 0.73, p-value = 0.39, still good values
+bgtest(kvar_model, order = 1, order.by = NULL, type = c("Chisq", "F"), data = list())
+#LM = 0.061544, p-value = 0.8041, optimal values, as before
+
+    # -> the linear regression is not likely to have correlation errors,
+        #but not all tests produce the same result. 
+      #Overall, without outliers it presented a similar alternative.
+      #The regression with oil, on the other hand, has shown the
+        #best results for all tests.
+
 
 # TESTS FOR NORMALITY
 
-
 # Jarque and Bera Test
+
 jb.norm.test(fitWithoutOutlier$residuals, nrepl = 200)
 #JB = 597.29, p-value < 2.2e-16: SHOULD LOOK FOR JB DISTRIBUTION (chi-square(2))
 
+jb.norm.test(phillips$residuals, nrepl = 200)
+#JB = 7.8915, p-value = 0.03, bad values
+jb.norm.test(fitWithoutOutlier$residuals, nrepl = 200)
+#JB = 5.7754, p-value = 0.04 the model has sensibly improved
+jb.norm.test(kvar_model$residuals, nrepl = 200)
+#JB = 23.874, p-value < 2.2e-16, the oil regression has problems with normality
+
+    # -> the linear regression is likely to have some normality errors,
+          #but not clearly displayed. 
+        #Overall, without outliers it presented a better, but not great, alternative.
+        #The regression with oil suggests instead that the values 
+         #are not normally distributed.
