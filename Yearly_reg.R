@@ -145,6 +145,12 @@ ggplot(data=NULL, aes(x=Years, y=unemployment_y))+
   geom_line(color ='blue')+
   geom_line(aes(x=Years, y=inflation[year]), color='red') 
 
+# it looks like it goes down when the other goes up: testing this we realized it 
+# wasn't true
+(summary(model_no_delta <- lm(inflation[year] ~ unemployment_y)))
+
+
+
 ### MODEL RESIDUALS ###
 
 # We fit a simple model from our wage data: infl  = a + b*unempl + e
@@ -187,10 +193,15 @@ ggplot(df2, aes(x = years, y = kvar_model$residuals)) + geom_line(color = 'green
  # geom_line(aes(x=years, y=unemployment), color='red')+
 #  geom_line(aes(x= years, y= infl_variation), color ='blue')+
 #  geom_line(aes(x= years, y= phillips$fitted.values), color ='orange')
-ggplot(df2, aes(x  = kvar_model$residuals)) + geom_histogram(color = 'green')
-mean(kvar_model$residuals)
-var(kvar_model$residuals)
+e=kvar_model$residuals
+mu = mean(kvar_model$residuals)
+V = var(kvar_model$residuals)
+ggplot(df2, aes(x = e)) + geom_histogram(color = 'green')
+hist(e, freq=F, breaks=32)
+lines(seq(-5, 5, by=.1), dnorm(seq(-5, 5, by=.1), mu, V^0.5))
+
 # THEY LOOK QUASI-Normal
+
 
 # verify with White test
 white_lm(kvar_model, interactions = FALSE, statonly = FALSE)
@@ -270,17 +281,20 @@ mean(e_hat)
 
 
 # TESTS FOR HOMOSCEDASTICITY
-
 # Godfeld-Quand Test
 gqtest(phillips, point = 0.5, fraction = 0, alternative = c("greater", "two.sided", "less"),
        order.by = NULL, data = list())
+gqtest(fitWithoutOutlier, point = 0.5, fraction = 0, alternative = c("greater", "two.sided", "less"),
+       order.by = NULL, data = list())
+
 
 # Breusch-Pagan Test
 bptest(phillips, varformula = NULL, studentize = TRUE, data = list())
 #p-value = 0.0006893: 0.069% small SHOULD BE GOOD --> Acceptance region
+bptest(fitWithoutOutlier, varformula = NULL, studentize = TRUE, data = list())
 
 # White Test
-white_lm(phillips, interactions = FALSE, statonly = FALSE)
+white_lm(fitWithoutOutlier, interactions = FALSE, statonly = FALSE)
 #p-value 0.000304: 0.03% small HOWEVER HERE WE SHOULD LOOK FOR R^2
 
 
@@ -288,16 +302,15 @@ white_lm(phillips, interactions = FALSE, statonly = FALSE)
 
 
 # Durbin-Watson Test
-dwtest(phillips, order.by = NULL, alternative = c("greater", "two.sided", "less"),
+dwtest(fitWithoutOutlier, order.by = NULL, alternative = c("greater", "two.sided", "less"),
        iterations = 15, exact = NULL, tol = 1e-10, data = list())
 #DW = 0.095004: too small, DW should be around 2 in H0, VERY BAD --> Rejection region
 #CHECK MEANING OF DYNAMIC MODELS (cannot be used under those)
 
 # Breusch-Godfrey Test
-bgtest(phillips, order = 1, order.by = NULL, type = c("Chisq", "F"), data = list())
+bgtest(fitWithoutOutlier, order = 1, order.by = NULL, type = c("Chisq", "F"), data = list())
 #p-value < 2.2e-16: r should be close to 0, I don't know about the p-vale
-# very small though, SHOULD BE GOOD --> Acceptance region 
-
+# very small though, SHOULD BE GOOD --> Acceptance region
 
 # TESTS FOR NORMALITY
 
