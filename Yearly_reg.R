@@ -145,6 +145,12 @@ ggplot(data=NULL, aes(x=Years, y=unemployment_y))+
   geom_line(color ='blue')+
   geom_line(aes(x=Years, y=inflation[year]), color='red') 
 
+# it looks like it goes down when the other goes up: testing this we realized it 
+# wasn't true
+(summary(model_no_delta <- lm(inflation[year] ~ unemployment_y)))
+
+
+
 ### MODEL RESIDUALS ###
 
 # We fit a simple model from our wage data: infl  = a + b*unempl + e
@@ -187,10 +193,15 @@ ggplot(df2, aes(x = years, y = kvar_model$residuals)) + geom_line(color = 'green
  # geom_line(aes(x=years, y=unemployment), color='red')+
 #  geom_line(aes(x= years, y= infl_variation), color ='blue')+
 #  geom_line(aes(x= years, y= phillips$fitted.values), color ='orange')
-ggplot(df2, aes(x  = kvar_model$residuals)) + geom_histogram(color = 'green')
-mean(kvar_model$residuals)
-var(kvar_model$residuals)
+e=kvar_model$residuals
+mu = mean(kvar_model$residuals)
+V = var(kvar_model$residuals)
+ggplot(df2, aes(x = e)) + geom_histogram(color = 'green')
+hist(e, freq=F, breaks=32)
+lines(seq(-5, 5, by=.1), dnorm(seq(-5, 5, by=.1), mu, V^0.5))
+
 # THEY LOOK QUASI-Normal
+
 
 # verify with White test
 white_lm(kvar_model, interactions = FALSE, statonly = FALSE)
@@ -270,7 +281,6 @@ mean(e_hat)
 
 
 # TESTS FOR HOMOSCEDASTICITY
-
 # Godfeld-Quand Test
 gqtest(phillips, point = 0.5, fraction = 0, alternative = c("greater", "two.sided", "less"),
        order.by = NULL, data = list())
@@ -300,8 +310,7 @@ dwtest(fitWithoutOutlier, order.by = NULL, alternative = c("greater", "two.sided
 # Breusch-Godfrey Test
 bgtest(fitWithoutOutlier, order = 1, order.by = NULL, type = c("Chisq", "F"), data = list())
 #p-value < 2.2e-16: r should be close to 0, I don't know about the p-vale
-# very small though, SHOULD BE GOOD --> Acceptance region 
-
+# very small though, SHOULD BE GOOD --> Acceptance region
 
 # TESTS FOR NORMALITY
 
