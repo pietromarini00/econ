@@ -58,18 +58,20 @@ empl_prot4 <- e_p$Value[65:71] #-> Version 4 (2008-2019)
 
 year <- seq(1, 442, by=12)
 
+change_pi_y <- (pi[13:454]-pi[1:442])[year]
+unemployment_y <- u$Value[1:442][year]
 
 ### LINEAR REGRESSION ###
 
 
-df <- data.frame(xvar = unemployment, yvar = change_pi)
-infl_variation <- change_pi
-ggplot(df, aes(x= unemployment, y= infl_variation)) + 
+df <- data.frame(xvar = unemployment_y, yvar = change_pi_y)
+infl_variation <- change_pi_y
+ggplot(df, aes(x= unemployment_y, y= infl_variation)) + 
   geom_point()+
   geom_smooth(method=lm)
 
 # Linear model fitting
-(summary(phillips <- lm(infl_variation ~ unemployment, data=df)))
+(summary(phillips <- lm(infl_variation ~ unemployment_y, data=df)))
 # We fit a simple model from our wage data: infl  = a + b*unempl + e
 inflation_hat <- fitted(phillips) # fitted values: infl_hat = a + b*unempl
 e_hat <- resid(phillips)  # redisuals: e_hat = infl - a - b*unempl = infl - infl_hat
@@ -98,13 +100,13 @@ ggplot(data=NULL, aes(x=month, y=inflation))+
 
 
 #PIETRO
-#dat2 <- data.frame(xvar = infl$TIME, yvar = infl$Value)
-#inflation <- infl$Value
-#month <- 1:479 # We plot it over the months, the equivalent of 40 years
-#ggplot(data=NULL, aes(x=month, y=inflation))+ 
-#  geom_line(color ='blue')+
-#  geom_line(aes(x=months, y=unemployment), color='red')
-#month <- 1:442
+dat2 <- data.frame(xvar = infl$TIME, yvar = infl$Value)
+inflation <- infl$Value
+month <- 1:479 # We plot it over the months, the equivalent of 40 years
+ggplot(data=NULL, aes(x=month, y=inflation))+ 
+  geom_line(color ='blue')+
+  geom_line(aes(x=months, y=unemployment), color='red')
+month <- 1:442
 
 #PILVI
 ggplot(data=NULL, aes(x=month, y=inflation))+ 
@@ -211,17 +213,15 @@ summary(lm(change_pi ~ unemployment + empl_prot1, data = df2))
 
 # OLS imposes 0 covariance between the residuals and the unemployment
 # and zero mean for the error term
-cov(u$Value[1:442],e_hat)
+cov(u$Value[1:442][year],e_hat)
 mean(e_hat)
 
 
 # TESTS FOR HOMOSCEDASTICITY
 
-
 # Godfeld-Quand Test
 gqtest(phillips, point = 0.5, fraction = 0, alternative = c("greater", "two.sided", "less"),
        order.by = NULL, data = list())
-#p-value = 0.001334: 0.13% small enough SHOULD BE GOOD --> Acceptance region
 
 # Breusch-Pagan Test
 bptest(phillips, varformula = NULL, studentize = TRUE, data = list())
