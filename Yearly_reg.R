@@ -123,14 +123,27 @@ ggplot(data=NULL, aes(x=Years, y=inflation[year]))+
   geom_line()
 
 
+#change inflation over the years
+
+
 ### INFLATION AND UNEMPLOYMENT VARIATIONS OVER TIME ###
 
 ggplot(data=NULL, aes(x=month, y=inflation))+ 
   geom_line(color ='blue')+
-  geom_line(aes(x=month, y=unemployment), color='red') + 
-  geom_point(aes(x=month, y=e_hat), color="gray")
+  geom_line(aes(x=month, y=unemployment), color='red') #+ 
+  #geom_point(aes(x=month, y=e_hat), color="gray")
 
 
+#Unemployment and change in inflation over the years 
+ggplot(data=NULL, aes(x=Years, y=change_pi[year]))+ 
+  geom_line(color ='blue')+
+  geom_line(aes(x=Years, y=unemployment_y), color='red') #+ 
+#geom_point(aes(x=month, y=e_hat), color="gray")
+
+#Unemployment and inflation over the years 
+ggplot(data=NULL, aes(x=Years, y=unemployment_y))+ 
+  geom_line(color ='blue')+
+  geom_line(aes(x=Years, y=inflation[year]), color='red') 
 
 ### MODEL RESIDUALS ###
 
