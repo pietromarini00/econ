@@ -64,25 +64,30 @@ unemployment_y <- u$Value[1:442][year]
 df <- data.frame(xvar = unemployment_y, yvar = change_pi_y)
 infl_variation <- change_pi_y
 
-# Linear model fitting
+# Linear model fitting: first model with only unemployment
 (summary(phillips <- lm(infl_variation ~ unemployment_y, data=df)))
-
-model.diag.metrics <- augment(phillips)
+# the scores as we can see from the summary aren't great. Let's Understand why 
+# the linear pattern is not so evident
+print(model.diag.metrics <- augment(phillips)) # some metrics plotted
 ggplot(model.diag.metrics, aes(x= unemployment_y, y= infl_variation)) + 
   geom_point()+
   geom_smooth(method=lm) +
   geom_segment(aes(xend = unemployment_y, yend = .fitted), color = "red", size = 0.3)
 
-
+# maybe adding some data can solve the issue so we regress year-on-year for each 
+# month
                     ### LINEAR REGRESSION MONTHLY ###
 
 # Data
 df <- data.frame(xvar = unemployment, yvar = change_pi)
 infl_variation_m <- change_pi
 
-# Linear model fitting
+# Linear model fitting monthly data
 (summary(phillips_m <- lm(infl_variation_m ~ unemployment, data=df)))
+# these results have a higher p-value but the R^2 is still low, even lower if
+# possible
 
+# a less nice plot
 model.diag.metrics_m <- augment(phillips_m)
 ggplot(model.diag.metrics_m, aes(x= unemployment, y= infl_variation_m)) + 
   geom_point()+
@@ -90,7 +95,8 @@ ggplot(model.diag.metrics_m, aes(x= unemployment, y= infl_variation_m)) +
   geom_segment(aes(xend = unemployment, yend = .fitted), color = "red", size = 0.3)
 
 
-
+# maybe something we should have done at the beginning. Look at the time series
+# for all the data
                 ### INIDIVDUAL VARIATIONS OVER TIME ###
 
 
@@ -134,10 +140,10 @@ ggplot(data=NULL, aes(x=month, y=inflation))+
   geom_point(aes(x=month, y=e_hat_m), color="gray")
 
 #Unemployment and change in inflation over the years 
-ggplot(data=NULL, aes(x=Years, y=change_pi[year]))+ 
-  geom_line(color ='blue')+
-  geom_line(aes(x=Years, y=unemployment_y), color='red') + 
-  geom_point(aes(x=month, y=e_hat_m), color="gray")
+#ggplot(data=NULL, aes(x=Years, y=change_pi[year]))+ 
+#  geom_line(color ='blue')+
+#  geom_line(aes(x=Years, y=unemployment_y), color='red') + 
+#  geom_point(aes(x=month, y=e_hat_m), color="gray")
 
 #Unemployment and inflation over the years 
 ggplot(data=NULL, aes(x=Years, y=unemployment_y))+ 
@@ -186,19 +192,67 @@ kvar_model <-(lm(change_inflation ~ unemployment + oil_real + share_prices + soc
 summary(kvar_model)
 
 ggplot(df2, aes(x = Years, y = kvar_model$residuals)) + geom_line(color = 'green')+
-  geom_line(aes(x=Years, y=unemployment), color='red')+
-  geom_line(aes(x= Years, y= infl_variation), color ='blue')+
-  geom_line(aes(x= Years, y= phillips$fitted.values), color ='orange')
+  geom_line(aes(x=Years, y=unemployment), color='red')+ # unemployment
+  geom_line(aes(x= Years, y= infl_variation), color ='blue')+ #inflation change
+  geom_line(aes(x= Years, y= phillips$fitted.values), color ='orange') #fitted
 
 # We define supplementary elements
 e = kvar_model$residuals
 mu = mean(e)
 V = var(e)
-ggplot(df2, aes(x = e)) + geom_histogram(color = 'green')
+#ggplot(df2, aes(x = e)) + geom_histogram(color = 'green')
 hist(e, freq=F, breaks=32)
 lines(seq(-5, 5, by=.1), dnorm(seq(-5, 5, by=.1), mu, V^0.5))
 # THEY LOOK QUASI-Normal
 
+
+#  LINEAR REGRESSION WITH 10y YIELD
+
+df2 <- data.frame(unemployment = unemployment, 
+                  yield_10 = y10$IRLTLT01IEM156N)
+yield10_model <-(lm(change_pi ~ unemployment + yield_10, data = df2))
+summary(yield10_model)
+
+error = yield10_model$residuals
+mu = mean(error)
+V = var(error)
+#ggplot(df2, aes(x = e)) + geom_histogram(color = 'green')
+hist(error, freq=F, breaks=32)
+#lines(seq(-5, 5, by=.1), dnorm(seq(-5, 5, by=.1), mu, V^0.5))
+lines(seq(-10, 10, by=.1), dt(seq(-10, 10, by=.1), 2))
+# looks more like a t-student
+
+
+#  LINEAR REGRESSION WITH SHARE PRICES
+share_prices = s_p[1:442]
+df3 <- data.frame(unemployment = unemployment, 
+                  share_prices = share_prices)
+shares_model <-(lm(change_pi ~ unemployment + share_prices, data = df3))
+summary(shares_model)
+
+sherror = shares_model$residuals
+mu = mean(sherror)
+V = var(sherror)
+#ggplot(df2, aes(x = e)) + geom_histogram(color = 'green')
+hist(error, freq=F, breaks=32)
+lines(seq(-10, 10, by=.1), dt(seq(-10, 10, by=.1), 2))
+
+
+#  LINEAR REGRESSION WITH CHANGES IN OIL PRICES
+
+df4 <- data.frame(unemployment = unemployment, 
+                  change_oil = change_oil)
+oil_model <-(lm(change_pi ~ unemployment + change_oil, data = df4))
+summary(oil_model)
+
+oil_error = oil_model$residuals
+mu = mean(oil_error)
+V = var(oil_error)
+#ggplot(df2, aes(x = e)) + geom_histogram(color = 'green')
+hist(error, freq=F, breaks=32)
+#lines(seq(-5, 5, by=.1), dnorm(seq(-5, 5, by=.1), mu, V^0.5))
+lines(seq(-10, 10, by=.1), dt(seq(-10, 10, by=.1), 2))
+# looks more like a t-student
 
 
 #LINEAR REGRESSION WITH LABOUR PROTECTION Z
