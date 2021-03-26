@@ -75,6 +75,21 @@ ggplot(model.diag.metrics, aes(x= unemployment_y, y= infl_variation)) +
   geom_segment(aes(xend = unemployment_y, yend = .fitted), color = "red", size = 0.3)
 
 
+### LINEAR REGRESSION MONTHLY ###
+
+# Data
+df <- data.frame(xvar = unemployment, yvar = change_pi)
+infl_variation_m <- change_pi
+
+# Linear model fitting
+(summary(phillips_m <- lm(infl_variation_m ~ unemployment, data=df)))
+
+model.diag.metrics_m <- augment(phillips_m)
+ggplot(model.diag.metrics_m, aes(x= unemployment, y= infl_variation_m)) + 
+  geom_point()+
+  geom_smooth(method=lm) +
+  geom_segment(aes(xend = unemployment, yend = .fitted), color = "red", size = 0.3)
+
 
 
 ### INIDIVDUAL VARIATIONS OVER TIME ###
