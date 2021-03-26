@@ -95,10 +95,17 @@ ggplot(model.diag.metrics_m, aes(x= unemployment, y= infl_variation_m)) +
 ### INIDIVDUAL VARIATIONS OVER TIME ###
 
 
-# Unemployment over the years
+# Unemployment over the months
 dat <- data.frame(xvar = u$TIME, yvar = u$Value)
 months <- 1:442 # We plot it over the months, the equivalent of 37 years
 ggplot(data=NULL, aes(x=months, y=unemployment))+
+  geom_line()
+
+# Unemployment over the years
+dat <- data.frame(xvar = u$TIME[year], yvar = u$Value[year])
+# We plot it over the 37 years
+Years = 1983:2019
+ggplot(data=NULL, aes(x=Years, y=unemployment_y))+
   geom_line()
 
 # Inflation over the years
