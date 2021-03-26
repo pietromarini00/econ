@@ -23,20 +23,17 @@ e_p <- read.csv("~/Desktop/econ/empl_prot.csv")
 s_p <- read.csv("~/Desktop/econ/Share_prices.csv")
 # oil price adjusted for inflation [WTI]
 real_oil_prices <- read_excel("~/Desktop/econ/real_oil_prices.xlsx")
-
 # adult education
 #a_e <- read.csv("~/Desktop/econ/adult_educ.csv") ---> missing values
-
 # social security contribution
 SSC <- read.csv("~/Desktop/econ/Soc_sec_contrib.csv")
-
 # fatalities from terrorism [IRA]
 Terr <- read.csv("~/Desktop/econ/fatalities_from_terrorism.csv") #missing values; wrong csv
-
 # Housing Market
 H_p <- read.csv("~/Desktop/econ/Housing_IRL.csv")
 # Yield 10 year on Irish Government Bonds
 y10 <- read.csv("~/Desktop/econ/Yield_10y.csv")
+
 
 #VARIABLE NAMES
 pi <- infl$Value[26:479]
@@ -51,30 +48,32 @@ s_p <- s_p$Value
 s_p <- s_p[1:442]
 oil_real <-  real_oil_prices$Oil_Real[109:550]
 oil_change <- (oil_real[110:552]-oil_real[98:540])/(oil_real[98:540])
-empl_prot1 <- e_p$Value[1:30] #-> Version 1 (1985-2019)
-empl_prot2 <- e_p$Value[31:52] #-> Version 2 (1998-2019)
-empl_prot3 <- e_p$Value[53:64] #-> Version 3 (1998-2019)
-empl_prot4 <- e_p$Value[65:71] #-> Version 4 (2008-2019)
+empl_prot1 <- e_p$Value[1:30] # strictness of dismissal regulation for workers on regular contracts (1985-2019) 
+empl_prot2 <- e_p$Value[31:52] # strictness of regulation of individual dismissals of workers on regular contracts (1998-2019)
+empl_prot3 <- e_p$Value[53:64] # strictness of regulation of collective dismissals of workers on regular contracts (2000-2019)
+empl_prot4 <- e_p$Value[65:71] # Version 4 (2008-2019)
 
 year <- seq(1, 442, by=12)
-
 change_pi_y <- (pi[13:454]-pi[1:442])[year]
 unemployment_y <- u$Value[1:442][year]
 
+
+
 ### LINEAR REGRESSION ###
 
-
+# Data
 df <- data.frame(xvar = unemployment_y, yvar = change_pi_y)
 infl_variation <- change_pi_y
-ggplot(df, aes(x= unemployment_y, y= infl_variation)) + 
-  geom_point()+
-  geom_smooth(method=lm)
 
 # Linear model fitting
 (summary(phillips <- lm(infl_variation ~ unemployment_y, data=df)))
-# We fit a simple model from our wage data: infl  = a + b*unempl + e
-inflation_hat <- fitted(phillips) # fitted values: infl_hat = a + b*unempl
-e_hat <- resid(phillips)  # redisuals: e_hat = infl - a - b*unempl = infl - infl_hat
+
+model.diag.metrics <- augment(phillips)
+ggplot(model.diag.metrics, aes(x= unemployment_y, y= infl_variation)) + 
+  geom_point()+
+  geom_smooth(method=lm) +
+  geom_segment(aes(xend = unemployment_y, yend = .fitted), color = "red", size = 0.3)
+
 
 
 
@@ -98,17 +97,6 @@ ggplot(data=NULL, aes(x=month, y=inflation))+
 
 ### INFLATION AND UNEMPLOYMENT VARIATIONS OVER TIME ###
 
-
-#PIETRO
-dat2 <- data.frame(xvar = infl$TIME, yvar = infl$Value)
-inflation <- infl$Value
-month <- 1:479 # We plot it over the months, the equivalent of 40 years
-ggplot(data=NULL, aes(x=month, y=inflation))+ 
-  geom_line(color ='blue')+
-  geom_line(aes(x=months, y=unemployment), color='red')
-month <- 1:442
-
-#PILVI
 ggplot(data=NULL, aes(x=month, y=inflation))+ 
   geom_line(color ='blue')+
   geom_line(aes(x=month, y=unemployment), color='red') + 
@@ -118,18 +106,21 @@ ggplot(data=NULL, aes(x=month, y=inflation))+
 
 ### MODEL RESIDUALS ###
 
+# We fit a simple model from our wage data: infl  = a + b*unempl + e
+inflation_hat <- fitted(phillips) # fitted values: infl_hat = a + b*unempl
+e_hat <- resid(phillips)  # redisuals: e_hat = infl - a - b*unempl = infl - infl_hat
 
-df <- augment(phillips)
-ggplot(df, aes(x = .fitted, y = .resid)) + geom_point()
+ggplot(model.diag.metrics, aes(x = .fitted, y = .resid)) + geom_point()
 
 # Model Residuals over time
-ggplot(df, aes(x = 1:442, y = e_hat)) + geom_line(color = 'green')+
-  geom_line(aes(x=months, y=unemployment), color='red')+
-  geom_line(aes(x= months, y= infl_variation), color ='blue')+
-  geom_line(aes(x= months, y= phillips$fitted.values), color ='orange')
+ggplot(model.diag.metrics, aes(x = year, y = e_hat)) + 
+  geom_line(color = 'green')+
+  geom_line(aes(x=year, y=unemployment_y), color='red')+
+  geom_line(aes(x= year, y= infl_variation), color ='blue')+
+  geom_line(aes(x= year, y= phillips$fitted.values), color ='orange')
 
 # ONLY RESIDUALS
-ggplot(df, aes(x = 1:442, y = e_hat)) + geom_line(color = 'blue')
+ggplot(df, aes(x = year, y = e_hat)) + geom_line(color = 'blue')
 
 
 
@@ -194,22 +185,42 @@ se <- sqrt(var_hat); se
 # you can again easily check that we get the same standard errors as with R's "lm" command
 
 
+
 #LINEAR REGRESSION WITH LABOUR PROTECTION Z
 
 
 #TO DO: BISOGNA TAGLIARE UNEMPLOYMENT (QUANDO INIZIA) E CHANGE_PI (QUANDO INIZIA)
 #       E PRENDERE SOLO UN VALORE OGNI DODICI DAL MOMENTO CHE EMPL_PROT1 è ANNUALE
-N <- length(unemployment)
-df2 <- data.frame(xvar = unemployment, xvar2 = empl_prot1, yvar = change_pi)
-summary(lm(change_pi ~ unemployment + empl_prot1, data = df2))
-
+df2 <- data.frame(xvar = unemployment_y[0:30], xvar2 = empl_prot1, yvar = change_pi_y[0:30])
+summary(lm(change_pi_y[0:30] ~ unemployment_y[0:30] + empl_prot1, data = df2))
 
 
 ### TEST ON THE ASSUMPTIONS ###
 
+# GRAPH TESTS
+
+par(mfrow=c(2,2))
+plot(phillips)
+plot(phillips, 4)
+
+fitWithoutOutlier <- lm(infl_variation[-29][-22][-3][-1] ~ unemployment_y[-29][-22][-3][-1], data=df)
+
+model.diag.metrics2 <- augment(fitWithoutOutlier)
+ggplot(model.diag.metrics2, aes(x= unemployment_y[-29][-22][-3][-1], y= infl_variation[-29][-22][-3][-1])) + 
+  geom_point()+
+  geom_smooth(method=lm) +
+  geom_segment(aes(xend = unemployment_y[-29][-22][-3][-1], yend = .fitted), color = "red", size = 0.3)
+
+par(mfrow=c(2,2))
+plot(fitWithoutOutlier)
+plot(fitWithoutOutlier, 5)
+plot(fitWithoutOutlier, 4)
+
+summary(fitWithoutOutlier)
+summary(phillips)
+
 
 # OLS TRIVIAL TEST
-
 
 # OLS imposes 0 covariance between the residuals and the unemployment
 # and zero mean for the error term
