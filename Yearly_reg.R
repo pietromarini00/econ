@@ -366,6 +366,16 @@ white_lm(kvar_model, interactions = FALSE, statonly = FALSE)
       #The alternative with oil, however, has shown heteroscedasticity.
 
 
+#ITNRODUCE THE HETEROSKEDASTIC ROBUST SE
+
+# given F-test from auxiliary regression, again we reject the null of homoskedasticity
+# then we should use heteroskedasticity robust SE
+coeftest(phillips, vcov=hccm)
+coeftest(phillips) #opposed to model without roust SE
+
+
+
+
 # TESTS FOR SERIALLY CORRELATED ERRORS
 
 # Durbin-Watson Test
@@ -395,6 +405,8 @@ bgtest(kvar_model, order = 1, order.by = NULL, type = c("Chisq", "F"), data = li
       #The regression with oil, on the other hand, has shown the
         #best results for all tests.
 
+# if serial correlation was an issue, one would want to use HAC-robust standard errors
+coeftest(phillips, vcov=vcovHAC)
 
 # TESTS FOR NORMALITY
 
