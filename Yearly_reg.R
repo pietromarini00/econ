@@ -9,6 +9,10 @@ library('lmtest')
 library('broom')
 library('normtest')
 library('skedastic')
+library(foreign);
+library(lmtest);
+library(car);
+library(sandwich)
 
 rm(list=ls())
 
@@ -17,20 +21,10 @@ infl <- read.csv("~/Desktop/econ/infl.csv")
 u <- read.csv("~/Desktop/econ/u.csv")
 oil <- read.csv("~/Desktop/econ/spotcrudeoilprice.csv")
 oil2 <- read.csv("~/Desktop/econ/crude_oil_import_price.csv") #ONLY ANNUAL
-PPP <- read.csv("~/Desktop/econ/PPP.csv")
-e_p <- read.csv("~/Desktop/econ/empl_prot.csv")
 # share prices index [IRL]
 s_p <- read.csv("~/Desktop/econ/Share_prices.csv")
 # oil price adjusted for inflation [WTI]
 real_oil_prices <- read_excel("~/Desktop/econ/real_oil_prices.xlsx")
-# adult education
-#a_e <- read.csv("~/Desktop/econ/adult_educ.csv") ---> missing values
-# social security contribution
-SSC <- read.csv("~/Desktop/econ/Soc_sec_contrib.csv")
-# fatalities from terrorism [IRA]
-Terr <- read.csv("~/Desktop/econ/fatalities_from_terrorism.csv") #missing values; wrong csv
-# Housing Market
-H_p <- read.csv("~/Desktop/econ/Housing_IRL.csv")
 # Yield 10 year on Irish Government Bonds
 y10 <- read.csv("~/Desktop/econ/Yield_10y.csv")
 
@@ -48,10 +42,6 @@ s_p <- s_p$Value
 s_p <- s_p[1:442]
 oil_real <-  real_oil_prices$Oil_Real[109:550]
 oil_change <- (oil_real[110:552]-oil_real[98:540])/(oil_real[98:540])
-empl_prot1 <- e_p$Value[1:30] # strictness of dismissal regulation for workers on regular contracts (1985-2019) 
-#empl_prot2 <- e_p$Value[31:52] # strictness of regulation of individual dismissals of workers on regular contracts (1998-2019)
-#empl_prot3 <- e_p$Value[53:64] # strictness of regulation of collective dismissals of workers on regular contracts (2000-2019)
-#empl_prot4 <- e_p$Value[65:71] # Version 4 (2008-2019)
 year <- seq(1, 442, by=12)
 change_pi_y <- (pi[13:454]-pi[1:442])[year]
 unemployment_y <- u$Value[1:442][year]
@@ -165,46 +155,13 @@ e_hat <- resid(phillips)  # redisuals: e_hat = infl - a - b*unempl = infl - infl
 # Model Residuals over the years
 ggplot(model.diag.metrics, aes(x = Years, y = e_hat)) + 
   geom_line(color = 'green')+
-  geom_line(aes(x=year, y=unemployment_y), color='red')+
-  geom_line(aes(x= year, y= infl_variation), color ='blue')+
-  geom_line(aes(x= year, y= phillips$fitted.values), color ='orange')
-
-# ONLY RESIDUALS
-ggplot(model.diag.metrics, aes(x = Years, y = e_hat)) + geom_line(color = 'blue')
+  geom_line(aes(x=Years, y=unemployment_y), color='red')+
+  geom_line(aes(x= Years, y= infl_variation), color ='blue')+
+  geom_line(aes(x= Years, y= phillips$fitted.values), color ='orange')
 
 
 
                         ### ALTERNATIVE LINEAR REGRESSIONS ###
-
-
-#LINEAR REGRESSION WITH CRUDE OIL SPOT PRICE
-
-N <- length(unemployment)
-df2 <- data.frame(unemployment = unemployment[year], 
-                  oil_real = oil_real[year], 
-                  share_prices = s_p[year],
-                  #adult_education = a_e[year], ---> missing values in some years :)
-                  social_contribution = SSC$Value,
-                  housing_prices = H_p$Value,
-                  yield_10year = y10$IRLTLT01IEM156N[year],
-                  change_inflation = change_pi[year])
-kvar_model <-(lm(change_inflation ~ unemployment + oil_real + share_prices + social_contribution + housing_prices + yield_10year, data = df2))
-summary(kvar_model)
-
-ggplot(df2, aes(x = Years, y = kvar_model$residuals)) + geom_line(color = 'green')+
-  geom_line(aes(x=Years, y=unemployment), color='red')+ # unemployment
-  geom_line(aes(x= Years, y= infl_variation), color ='blue')+ #inflation change
-  geom_line(aes(x= Years, y= phillips$fitted.values), color ='orange') #fitted
-
-# We define supplementary elements
-e = kvar_model$residuals
-mu = mean(e)
-V = var(e)
-#ggplot(df2, aes(x = e)) + geom_histogram(color = 'green')
-hist(e, freq=F, breaks=32)
-lines(seq(-5, 5, by=.1), dnorm(seq(-5, 5, by=.1), mu, V^0.5))
-# THEY LOOK QUASI-Normal
-
 
 #  LINEAR REGRESSION WITH 10y YIELD
 
@@ -259,20 +216,21 @@ lines(seq(-10, 10, by=.1), dt(seq(-10, 10, by=.1), 2))
 #LINEAR REGRESSION WITH CRUDE OIL SPOT PRICE
 
 N <- length(unemployment)
+
 df2 <- data.frame(unemployment = unemployment, 
                   change_oil = change_oil, 
                   share_prices = share_prices,
                   yield_10 = y10$IRLTLT01IEM156N,
                   change_pi = change_pi)
-kvar_model <-(lm(change_pi ~ unemployment + change_oil + share_prices , data = df2))
+kvar_model <-(lm(change_pi ~ unemployment + change_oil + share_prices + yield_10, data = df2))
 summary(kvar_model)
 
 #error
-e = kvar_model$residuals
-mu = mean(e)
-V = var(e)
+e_kvar = kvar_model$residuals
+mu = mean(e_kvar)
+V = var(e_kvar)
 #ggplot(df2, aes(x = e)) + geom_histogram(color = 'green')
-hist(e, freq=F, breaks=32, ylim =c(0,0.40) )
+hist(e_kvar, freq=F, breaks=32, ylim =c(0,0.40) )
 lines(seq(-5, 5, by=.1), dnorm(seq(-5, 5, by=.1), mu, V^0.5))
 lines(seq(-10, 10, by=.1), dt(seq(-10, 10, by=.1), 3))
 
@@ -326,10 +284,10 @@ mean(e_hat_m)
 cov(u$Value[1:442][year],e_hat) 
 mean(e_hat)
     #For version with oil
-cov(u$Value[1:442][year],e) #NOT SURE
-mean(e)
+cov(u$Value[1:442],e_kvar) #NOT SURE
+mean(e_kvar)
 
-    # -> They both pass this test
+    # -> All three pass this test
 
 
 # TESTS FOR HOMOSCEDASTICITY
@@ -341,7 +299,13 @@ gqtest(phillips, point = 0.5, fraction = 0, alternative = c("greater", "two.side
 gqtest(fitWithoutOutlier, point = 0.5, fraction = 0, alternative = c("greater", "two.sided", "less"), order.by = NULL, data = list())
 #GQ = 1.4, p-value smaller than before but acceptable 
 gqtest(kvar_model, point = 0.5, fraction = 0, alternative = c("greater", "two.sided", "less"), order.by = NULL, data = list())
-#GQ = 1.4465, p-value = 0.2743 could be acceptable fro model with oil
+#GQ = 1.698, p-value = 5.576e-05 null hypothesis of homoskedasticity is rejected and 
+#heteroskedasticity assumed
+
+ 
+#  ---> > If the test statistic has a p-value below an appropriate threshold 
+#(e.g. p < 0.05) then the null hypothesis of homoskedasticity is rejected and 
+#heteroskedasticity assumed.
 
 # Breusch-Pagan Test
 
@@ -350,7 +314,7 @@ bptest(phillips, varformula = NULL, studentize = TRUE, data = list())
 bptest(fitWithoutOutlier, varformula = NULL, studentize = TRUE, data = list())
 #BP = 0.33, p-value = 0.564, optival values 
 bptest(kvar_model, varformula = NULL, studentize = TRUE, data = list())
-#BP = 7.5061, p-value = 0.2766, this test, however, could reveal some heteroscedasticity
+#BP = 10.376, p-value = 0.03455, this test, however, could reveal some heteroscedasticity
 
 # White Test
 
@@ -359,7 +323,7 @@ white_lm(phillips, interactions = FALSE, statonly = FALSE)
 white_lm(fitWithoutOutlier, interactions = FALSE, statonly = FALSE)
 #W = 2.24, p-value = 0.326, acceptable value 
 white_lm(kvar_model, interactions = FALSE, statonly = FALSE)
-#W = 22.2, p-value = 0.035, heteroscedasticity confirmed from this test too
+#W = 32.8, p-value = 0.000062, heteroscedasticity confirmed from this test too
 
     # -> the linear regression is not heteroscedastic. 
       #Overall, without outliers it presented a better alternative
@@ -370,10 +334,8 @@ white_lm(kvar_model, interactions = FALSE, statonly = FALSE)
 
 # given F-test from auxiliary regression, again we reject the null of homoskedasticity
 # then we should use heteroskedasticity robust SE
-coeftest(phillips, vcov=hccm)
-coeftest(phillips) #opposed to model without roust SE
-
-
+coeftest(kvar_model, vcov=hccm)
+coeftest(kvar_model) #opposed to model without roust SE
 
 
 # TESTS FOR SERIALLY CORRELATED ERRORS
@@ -405,8 +367,11 @@ bgtest(kvar_model, order = 1, order.by = NULL, type = c("Chisq", "F"), data = li
       #The regression with oil, on the other hand, has shown the
         #best results for all tests.
 
+
+#INTRODUCE THE HAC-ROBUST STANDARD ERRORS
+
 # if serial correlation was an issue, one would want to use HAC-robust standard errors
-coeftest(phillips, vcov=vcovHAC)
+coeftest(kvar_model, vcov=vcovHAC)
 
 # TESTS FOR NORMALITY
 
