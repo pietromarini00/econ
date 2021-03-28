@@ -66,7 +66,9 @@ ggplot(model.diag.metrics, aes(x= unemployment_y, y= infl_variation)) +
 
 # maybe adding some data can solve the issue so we regress year-on-year for each 
 # month
-                    ### LINEAR REGRESSION MONTHLY ###
+  
+
+                  ### LINEAR REGRESSION MONTHLY ###
 
 # Data
 df <- data.frame(xvar = unemployment, yvar = change_pi)
@@ -87,6 +89,8 @@ ggplot(model.diag.metrics_m, aes(x= unemployment, y= infl_variation_m)) +
 
 # maybe something we should have done at the beginning. Look at the time series
 # for all the data
+
+
                 ### INIDIVDUAL VARIATIONS OVER TIME ###
 
 
@@ -182,6 +186,7 @@ lines(seq(-10, 10, by=.1), dt(seq(-10, 10, by=.1), 2))
 
 
 #  LINEAR REGRESSION WITH SHARE PRICES
+
 share_prices = s_p[1:442]
 df3 <- data.frame(unemployment = unemployment, 
                   share_prices = share_prices)
@@ -296,7 +301,6 @@ gqtest(kvar_model, point = 0.5, fraction = 0, alternative = c("greater", "two.si
 #(e.g. p < 0.05) then the null hypothesis of homoskedasticity is rejected and 
 #heteroskedasticity assumed.
 
-
 # Breusch-Pagan Test
 
 bptest(phillips, varformula = NULL, studentize = TRUE, data = list())
@@ -362,6 +366,7 @@ bgtest(kvar_model, order = 1, order.by = NULL, type = c("Chisq", "F"), data = li
 
 # if serial correlation was an issue, one would want to use HAC-robust standard errors
 coeftest(kvar_model, vcov=vcovHAC)
+
 
 # TESTS FOR NORMALITY
 
