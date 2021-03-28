@@ -9,10 +9,10 @@ library('lmtest')
 library('broom')
 library('normtest')
 library('skedastic')
-library(foreign);
-library(lmtest);
-library(car);
-library(sandwich)
+library('foreign')
+library('lmtest')
+library('car')
+library('sandwich')
 
 rm(list=ls())
 
@@ -234,17 +234,6 @@ hist(e_kvar, freq=F, breaks=32, ylim =c(0,0.40) )
 lines(seq(-5, 5, by=.1), dnorm(seq(-5, 5, by=.1), mu, V^0.5))
 lines(seq(-10, 10, by=.1), dt(seq(-10, 10, by=.1), 3))
 
-# THEY LOOK QUASI-Normal
-
-
-#LINEAR REGRESSION WITH LABOUR PROTECTION Z
-
-
-#TO DO: BISOGNA TAGLIARE UNEMPLOYMENT (QUANDO INIZIA) E CHANGE_PI (QUANDO INIZIA)
-#       E PRENDERE SOLO UN VALORE OGNI DODICI DAL MOMENTO CHE EMPL_PROT1 è ANNUALE
-df2 <- data.frame(xvar = unemployment_y[0:30], xvar2 = empl_prot1, yvar = change_pi_y[0:30])
-summary(lm(change_pi_y[0:30] ~ unemployment_y[0:30] + empl_prot1, data = df2))
-
 
 
                         ### TEST ON THE ASSUMPTIONS ###
@@ -302,10 +291,10 @@ gqtest(kvar_model, point = 0.5, fraction = 0, alternative = c("greater", "two.si
 #GQ = 1.698, p-value = 5.576e-05 null hypothesis of homoskedasticity is rejected and 
 #heteroskedasticity assumed
 
- 
 #  ---> > If the test statistic has a p-value below an appropriate threshold 
 #(e.g. p < 0.05) then the null hypothesis of homoskedasticity is rejected and 
 #heteroskedasticity assumed.
+
 
 # Breusch-Pagan Test
 
