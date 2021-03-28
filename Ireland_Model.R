@@ -136,9 +136,10 @@ ggplot(data=NULL, aes(x=month, y=inflation))+
 #  geom_point(aes(x=month, y=e_hat_m), color="gray")
 
 #Unemployment and inflation over the years 
-ggplot(data=NULL, aes(x=Years, y=unemployment_y))+ 
-  geom_line(color ='blue')+
-  geom_line(aes(x=Years, y=inflation[year]), color='red') 
+unemployment_and_inflation=unemployment_y
+ggplot(data=NULL, aes(x=Years, y=unemployment_and_inflation))+ 
+  geom_line(color ='red')+
+  geom_line(aes(x=Years, y=inflation[year]), color='blue') 
 
 # it looks like it goes down when the other goes up:
 # testing this we realized it wasn't true
